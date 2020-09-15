@@ -1,0 +1,4 @@
+.notice.notice--error .go-create-room {
+  cursor: pointer;
+  text-decoration: underline;
+}
