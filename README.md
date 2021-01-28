@@ -32,6 +32,8 @@ If you are interested in running IVS + Chime demo services locally as part of le
 * [Amazon IVS docs](https://docs.aws.amazon.com/ivs/)
 * [User Guide](https://docs.aws.amazon.com/ivs/latest/userguide/)
 * [API Reference](https://docs.aws.amazon.com/ivs/latest/APIReference/)
+* [Learn more about Amazon IVS on IVS.rocks](https://ivs.rocks/)
+* [View more demos like this](https://ivs.rocks/examples)
 
 ## Known Issues
 * The application was written for demonstration purposes and not for production use.
