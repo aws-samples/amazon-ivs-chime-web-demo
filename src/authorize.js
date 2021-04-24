@@ -7,7 +7,7 @@ chime.endpoint = new AWS.Endpoint('https://service.chime.aws.amazon.com/console'
 const oneDayFromNow = Math.floor(Date.now() / 1000) + 60 * 60 * 24;
 const strictVerify = true;
 
-exports.authorize = async (event, context, callback) => {
+exports.handler = async (event, context, callback) => {
     console.log('authorize event:', JSON.stringify(event, null, 2));
   
     const generatePolicy = (principalId, effect, resource, context) => {

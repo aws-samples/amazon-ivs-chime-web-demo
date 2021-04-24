@@ -1,0 +1,11 @@
+.cams.pos-relative.hide {
+  visibility: hidden;
+}
+
+.cams .cam > .controls__btn {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  right: -4px;
+  top: 4px;
+}

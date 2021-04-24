@@ -1,0 +1,115 @@
+:root {
+  --chat-row-template: 7.5rem 1fr 7.5rem;
+  --room-link-label-font-size: 1.6rem;
+  --composer-font-size: var(--room-link-label-font-size);
+  --chat-line-font-size: var(--room-link-label-font-size);
+  --chat-line-padding: 0.5rem 1rem;
+}
+
+@media (max-width: 960px) { /* Large Screens and below */
+  :root {
+    --chat-row-template: 5.5rem 1fr 7.5rem;
+    --room-link-label-font-size: 1.4rem;
+    --chat-line-padding: 0 1rem;
+  }
+}
+
+/* Popup container - to display Room link is copied to clipboard */
+.popup {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* The actual popup */
+.popup .popuptext {
+  visibility: hidden;
+  width: 250px;
+  background-color: #000;
+  color: #fff;
+  text-align: center;
+  border-radius: 0.6rem;
+  padding: 0.8rem 0;
+  position: absolute;
+  z-index: 1;
+  bottom: -5rem;
+}
+
+/* Popup arrow */
+.popup .popuptext::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -0.5rem;
+  border-width: 0.5rem;
+  border-style: solid;
+  border-color: transparent transparent #000 transparent;
+}
+
+.popup .show {
+  visibility: visible;
+  -webkit-animation: fadeIn 1s;
+  animation: fadeIn 1s;
+}
+
+/* Chat */
+.chat {
+  background: var(--color--tertiary);
+  display: grid;
+  grid-template-rows: var(--chat-row-template);
+}
+
+.chat__wrapper {
+  overflow: hidden;
+}
+
+.chat__wrapper .messages {
+  overflow-x: hidden;
+  overflow-y: auto;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.chat__room-link {
+  display: inline-flex;
+  place-content: center;
+  place-items: center;
+}
+
+.chat-line__link {
+  color: var(--color-text-link);
+  text-decoration: underline;
+}
+
+.room-link {
+  background: var(--color-bg-input);
+  padding: 0.5rem 1.5rem;
+  border-radius: 40px;
+  display: inline-flex;
+  place-content: center;
+  place-items: center;
+}
+
+.room-link__label {
+  color: var(--color-text-base);
+  font-size: var(--room-link-label-font-size);
+  padding: 0 1rem 0 0;
+}
+
+.chat-line {
+  font-size: var(--chat-line-font-size);
+  padding: var(--chat-line-padding);
+}
+
+.chime-web-composer {
+  font-size: var(--composer-font-size);
+  background: var(--color-bg-chat);
+  padding: 1.5rem;
+}

@@ -6,7 +6,7 @@ chime.endpoint = new AWS.Endpoint('https://service.chime.aws.amazon.com/console'
 
 const oneDayFromNow = Math.floor(Date.now() / 1000) + 60 * 60 * 24;
 const strictVerify = true;
-exports.ondisconnect = async event => {
+exports.handler = async event => {
     console.log('ondisconnect event:', JSON.stringify(event, null, 2));
     
     try {
