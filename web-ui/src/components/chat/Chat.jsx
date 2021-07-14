@@ -1,13 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import {
-  DefaultPromisedWebSocketFactory,
-  DefaultDOMWebSocketFactory,
-  FullJitterBackoff,
-  ReconnectingPromisedWebSocket
-} from 'amazon-chime-sdk-js';
 import * as config from '../../config';
-
 // Styles
 import './Chat.css';
 
@@ -34,17 +27,13 @@ class Chat extends Component {
   async initChatConnection() {
     const { Meeting, Attendee } = this.props.joinInfo;
     const messagingUrl = `${config.CHAT_WEBSOCKET}?MeetingId=${Meeting.MeetingId}&AttendeeId=${Attendee.AttendeeId}&JoinToken=${Attendee.JoinToken}`
-    const connection = new ReconnectingPromisedWebSocket(
-      messagingUrl,
-      [],
-      'arraybuffer',
-      new DefaultPromisedWebSocketFactory(new DefaultDOMWebSocketFactory()),
-      new FullJitterBackoff(1000, 0, 10000)
-    );
+
+    const connection = new WebSocket(messagingUrl)
+    connection.onopen = (event) => {
+      console.log("websocket is now open", event);
+    }
 
     if (config.DEBUG) console.log(connection);
-
-    await connection.open(this.WEB_SOCKET_TIMEOUT_MS);
 
     connection.addEventListener('message', event => {
       const messages = this.state.messages;

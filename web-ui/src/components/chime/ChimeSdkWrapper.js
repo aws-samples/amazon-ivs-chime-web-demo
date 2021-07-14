@@ -259,8 +259,12 @@ export default class ChimeSdkWrapper {
 
     this.publishDevicesUpdated();
 
-    this.audioVideo.bindAudioElement(element);
-    this.audioVideo.start();
+    try {
+      await this.audioVideo.bindAudioElement(element);
+      this.audioVideo.start();
+    } catch (e) {
+      console.error('Failed to bind audio element', e);
+    }
   }
 
   async joinRoomMessaging() {
