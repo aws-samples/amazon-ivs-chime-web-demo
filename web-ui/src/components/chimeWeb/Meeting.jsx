@@ -121,9 +121,9 @@ const Meeting = ({ chime, history, location }) => {
     currentAudioOutputDevice,
     currentVideoInputDevice,
   ) => {
-    this.currentVideoInputDevice = currentVideoInputDevice;
-    this.currentAudioInputDevice = currentAudioInputDevice;
-    this.currentAudioOutputDevice = currentAudioOutputDevice;
+    chime.chooseCurrentVideoInputDevice = currentVideoInputDevice;
+    chime.chooseCurrentAudioinputDevice = currentAudioInputDevice;
+    chime.chooseCurrentAudioOutputDevice = currentAudioOutputDevice;
 
     setShowSettings(false);
   };
