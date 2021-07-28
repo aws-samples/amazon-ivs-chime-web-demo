@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route
-} from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import * as config from '../config';
 // import './App.css';
 
@@ -26,19 +22,13 @@ function App() {
             <End />
           </Route>
           <Route path={`${baseHref}/meeting`}>
-            <Meeting
-              chime={chime}
-            />
+            <Meeting chime={chime} />
           </Route>
           <Route path={`${baseHref}/join`}>
-            <Join
-              chime={chime}
-            />
+            <Join chime={chime} />
           </Route>
           <Route path={`${baseHref}`}>
-            <Home
-              chime={chime}
-            />
+            <Home chime={chime} />
           </Route>
         </Switch>
       </Router>
