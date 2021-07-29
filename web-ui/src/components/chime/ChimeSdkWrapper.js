@@ -8,15 +8,13 @@ import {
   FullJitterBackoff,
   LogLevel,
   MeetingSessionConfiguration,
-  ReconnectingPromisedWebSocket
+  ReconnectingPromisedWebSocket,
 } from 'amazon-chime-sdk-js';
 
 import throttle from 'lodash/throttle';
 import * as config from '../../config';
 
-
 export default class ChimeSdkWrapper {
-
   static WEB_SOCKET_TIMEOUT_MS = 10000;
   static ROSTER_THROTTLE_MS = 400;
 
@@ -50,9 +48,7 @@ export default class ChimeSdkWrapper {
 
   async createRoom(role, name, title, playbackURL, region) {
     if (!name || !title || !role) {
-      console.error(
-           `role=${role} name=${name} title=${title} must exist`
-      );
+      console.error(`role=${role} name=${name} title=${title} must exist`);
       return;
     }
 
@@ -60,32 +56,25 @@ export default class ChimeSdkWrapper {
       name,
       title,
       playbackURL,
-      role
+      role,
     };
 
-    const response = await fetch(
-      `${config.CHIME_ROOM_API}/join`,
-      {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      }
-    );
+    const response = await fetch(`${config.CHIME_ROOM_API}/join`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
     const json = await response.json();
     if (json.error) {
-      throw new Error(
-        json.error
-      );
+      throw new Error(json.error);
     }
 
     const { JoinInfo } = json;
     if (!JoinInfo) {
-      throw new Error(
-        'CreateOrJoin.classRoomDoesNotExist'
-      );
+      throw new Error('CreateOrJoin.classRoomDoesNotExist');
     }
     this.configuration = new MeetingSessionConfiguration(
       JoinInfo.Meeting,
-      JoinInfo.Attendee
+      JoinInfo.Attendee,
     );
     await this.initializeMeetingSession(this.configuration);
 
@@ -99,7 +88,7 @@ export default class ChimeSdkWrapper {
   async reInitializeMeetingSession(JoinInfo, name) {
     this.configuration = new MeetingSessionConfiguration(
       JoinInfo.Meeting,
-      JoinInfo.Attendee
+      JoinInfo.Attendee,
     );
     await this.initializeMeetingSession(this.configuration);
 
@@ -114,7 +103,7 @@ export default class ChimeSdkWrapper {
     this.meetingSession = new DefaultMeetingSession(
       configuration,
       logger,
-      deviceController
+      deviceController,
     );
     this.audioVideo = this.meetingSession.audioVideo;
 
@@ -123,27 +112,27 @@ export default class ChimeSdkWrapper {
       (mediaDeviceInfo) => {
         this.audioInputDevices.push({
           label: mediaDeviceInfo.label,
-          value: mediaDeviceInfo.deviceId
+          value: mediaDeviceInfo.deviceId,
         });
-      }
+      },
     );
     this.audioOutputDevices = [];
     (await this.audioVideo.listAudioOutputDevices()).forEach(
       (mediaDeviceInfo) => {
         this.audioOutputDevices.push({
           label: mediaDeviceInfo.label,
-          value: mediaDeviceInfo.deviceId
+          value: mediaDeviceInfo.deviceId,
         });
-      }
+      },
     );
     this.videoInputDevices = [];
     (await this.audioVideo.listVideoInputDevices()).forEach(
       (mediaDeviceInfo) => {
         this.videoInputDevices.push({
           label: mediaDeviceInfo.label,
-          value: mediaDeviceInfo.deviceId
+          value: mediaDeviceInfo.deviceId,
         });
-      }
+      },
     );
     this.publishDevicesUpdated();
     this.audioVideo.addDeviceChangeObserver(this);
@@ -159,12 +148,7 @@ export default class ChimeSdkWrapper {
 
         this.audioVideo.realtimeSubscribeToVolumeIndicator(
           presentAttendeeId,
-          async (
-            attendeeId,
-            volume,
-            muted,
-            signalStrength
-          ) => {
+          async (attendeeId, volume, muted, signalStrength) => {
             const baseAttendeeId = new DefaultModality(attendeeId).base();
             if (baseAttendeeId !== attendeeId) {
               // Don't include the content attendee in the roster.
@@ -191,14 +175,14 @@ export default class ChimeSdkWrapper {
             }
             if (signalStrength !== null) {
               this.roster[attendeeId].signalStrength = Math.round(
-                signalStrength * 100
+                signalStrength * 100,
               );
             }
             if (this.title && attendeeId && !this.roster[attendeeId].name) {
               const response = await fetch(
                 `${config.CHIME_ROOM_API}/attendee?title=${encodeURIComponent(
-                  this.title
-                )}&attendeeId=${encodeURIComponent(attendeeId)}`
+                  this.title,
+                )}&attendeeId=${encodeURIComponent(attendeeId)}`,
               );
               const json = await response.json();
               if (json.AttendeeInfo && this.roster[attendeeId]) {
@@ -211,9 +195,9 @@ export default class ChimeSdkWrapper {
               //this.publishRosterUpdate.cancel();
             }
             this.publishRosterUpdate()();
-          }
+          },
         );
-      }
+      },
     );
   }
 
@@ -223,18 +207,15 @@ export default class ChimeSdkWrapper {
       return;
     }
 
-    window.addEventListener(
-      'unhandledrejection',
-      (event) => {
-        this.logError(event.reason);
-      }
-    );
+    window.addEventListener('unhandledrejection', (event) => {
+      this.logError(event.reason);
+    });
 
     const audioInputs = await this.audioVideo.listAudioInputDevices();
     if (audioInputs && audioInputs.length > 0 && audioInputs[0].deviceId) {
       this.currentAudioInputDevice = {
         label: audioInputs[0].label,
-        value: audioInputs[0].deviceId
+        value: audioInputs[0].deviceId,
       };
       await this.audioVideo.chooseAudioInputDevice(audioInputs[0].deviceId);
     }
@@ -243,7 +224,7 @@ export default class ChimeSdkWrapper {
     if (audioOutputs && audioOutputs.length > 0 && audioOutputs[0].deviceId) {
       this.currentAudioOutputDevice = {
         label: audioOutputs[0].label,
-        value: audioOutputs[0].deviceId
+        value: audioOutputs[0].deviceId,
       };
       await this.audioVideo.chooseAudioOutputDevice(audioOutputs[0].deviceId);
     }
@@ -252,15 +233,19 @@ export default class ChimeSdkWrapper {
     if (videoInputs && videoInputs.length > 0 && videoInputs[0].deviceId) {
       this.currentVideoInputDevice = {
         label: videoInputs[0].label,
-        value: videoInputs[0].deviceId
+        value: videoInputs[0].deviceId,
       };
       await this.audioVideo.chooseVideoInputDevice(null);
     }
 
     this.publishDevicesUpdated();
 
-    this.audioVideo.bindAudioElement(element);
-    this.audioVideo.start();
+    try {
+      await this.audioVideo.bindAudioElement(element);
+      this.audioVideo.start();
+    } catch (error) {
+      console.log('failed to bind audio element: ', error);
+    }
   }
 
   async joinRoomMessaging() {
@@ -275,7 +260,7 @@ export default class ChimeSdkWrapper {
       [],
       'arraybuffer',
       new DefaultPromisedWebSocketFactory(new DefaultDOMWebSocketFactory()),
-      new FullJitterBackoff(1000, 0, 10000)
+      new FullJitterBackoff(1000, 0, 10000),
     );
 
     await this.messagingSocket.open(this.WEB_SOCKET_TIMEOUT_MS);
@@ -294,7 +279,7 @@ export default class ChimeSdkWrapper {
           type: data.type,
           payload: data.payload,
           timestampMs: Date.now(),
-          name
+          name,
         });
       } catch (error) {
         this.logError(error);
@@ -308,7 +293,7 @@ export default class ChimeSdkWrapper {
     }
     const message = {
       message: 'sendmessage',
-      data: JSON.stringify({ type, payload })
+      data: JSON.stringify({ type, payload }),
     };
     try {
       this.messagingSocket.send(JSON.stringify(message));
@@ -333,10 +318,12 @@ export default class ChimeSdkWrapper {
     try {
       if (end && this.title) {
         await fetch(
-          `${config.CHIME_ROOM_API}/end?title=${encodeURIComponent(this.title)}`,
+          `${config.CHIME_ROOM_API}/end?title=${encodeURIComponent(
+            this.title,
+          )}`,
           {
-            method: 'POST'
-          }
+            method: 'POST',
+          },
         );
       }
     } catch (error) {
@@ -389,7 +376,7 @@ export default class ChimeSdkWrapper {
       }
       this.audioInputDevices.push({
         label: mediaDeviceInfo.label,
-        value: mediaDeviceInfo.deviceId
+        value: mediaDeviceInfo.deviceId,
       });
     });
     if (!hasCurrentDevice) {
@@ -411,7 +398,7 @@ export default class ChimeSdkWrapper {
       }
       this.audioOutputDevices.push({
         label: mediaDeviceInfo.label,
-        value: mediaDeviceInfo.deviceId
+        value: mediaDeviceInfo.deviceId,
       });
     });
     if (!hasCurrentDevice) {
@@ -433,7 +420,7 @@ export default class ChimeSdkWrapper {
       }
       this.videoInputDevices.push({
         label: mediaDeviceInfo.label,
-        value: mediaDeviceInfo.deviceId
+        value: mediaDeviceInfo.deviceId,
       });
     });
     if (!hasCurrentDevice) {
@@ -457,18 +444,16 @@ export default class ChimeSdkWrapper {
   }
 
   publishDevicesUpdated() {
-    this.devicesUpdatedCallbacks.forEach(
-      (callback) => {
-        callback({
-          currentAudioInputDevice: this.currentAudioInputDevice,
-          currentAudioOutputDevice: this.currentAudioOutputDevice,
-          currentVideoInputDevice: this.currentVideoInputDevice,
-          audioInputDevices: this.audioInputDevices,
-          audioOutputDevices: this.audioOutputDevices,
-          videoInputDevices: this.videoInputDevices
-        });
-      }
-    );
+    this.devicesUpdatedCallbacks.forEach((callback) => {
+      callback({
+        currentAudioInputDevice: this.currentAudioInputDevice,
+        currentAudioOutputDevice: this.currentAudioOutputDevice,
+        currentVideoInputDevice: this.currentVideoInputDevice,
+        audioInputDevices: this.audioInputDevices,
+        audioOutputDevices: this.audioOutputDevices,
+        videoInputDevices: this.videoInputDevices,
+      });
+    });
   }
 
   subscribeToRosterUpdate(callback) {
