@@ -1,11 +1,9 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import * as config from '../../config';
 
-import {
-  MeetingSessionStatusCode
-} from 'amazon-chime-sdk-js';
+import { MeetingSessionStatusCode } from 'amazon-chime-sdk-js';
 
 // Components
 import VideoPlayer from '../videoPlayer/VideoPlayer';
@@ -19,96 +17,89 @@ import Error from './Error';
 // Styles
 import './ChimeWeb.css';
 
-class Meeting extends Component {
+const Meeting = ({ chime, history, location }) => {
+  const [meetingStatus, setMeetingStatus] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showError, setShowError] = useState();
+  const [errorMsg, setErrorMsg] = useState();
+  const [ssName, setSSName] = useState('');
+  const [playbackURL, setPlaybackURL] = useState('');
+  const [joinInfo, setJoinInfo] = useState('');
+  const [ssData, setSSData] = useState('');
 
-  state = {
-    meetingStatus: null, // Loading, Success or Failed
-    showSettings: false,
+  const baseHref = config.BASE_HREF;
+  const audioElementRef = useRef();
+  const myVideoElement = useRef();
 
-    showError: false,
-    errorMsg: '',
-  }
-
-  constructor() {
-    super();
-
-    this.baseHref = config.BASE_HREF;
-    this.ssName = '';
-
-    this.audioElementRef = React.createRef();
-    this.myVideoElement = React.createRef();
-  }
-
-  componentDidMount() {
-
+  useEffect(() => {
     const start = async () => {
       try {
-
-        const qs = new URLSearchParams(this.props.location.search);
+        const qs = new URLSearchParams(location.search);
         const room = qs.get('room');
-        this.ssName = `chime[${room}]`;
-        if (!room || !sessionStorage.getItem(this.ssName)) {
-          this.props.history.push(`${this.baseHref}/`);
+        const ssNameChime = `chime[${room}]`;
+        setSSName(ssNameChime);
+        if (!room || !sessionStorage.getItem(ssNameChime)) {
+          history.push(`${baseHref}/`);
         }
 
-        const ssData = JSON.parse(sessionStorage.getItem(this.ssName));
-        if (config.DEBUG) console.log(ssData);
+        const ssDataChime = JSON.parse(sessionStorage.getItem(ssNameChime));
+        if (config.DEBUG) console.log(ssDataChime);
 
-        this.username = ssData.username;
-        this.title = ssData.title;
-        this.role = ssData.role;
+        const { username, title, role } = ssDataChime;
+        setSSData(ssDataChime);
 
-        if (!ssData.joinInfo) {
-          this.joinInfo = await this.props.chime.createRoom(this.role, this.username, this.title, ssData.playbackURL);
+        if (!ssDataChime.joinInfo) {
+          const joinInfoRoom = await chime.createRoom(
+            role,
+            username,
+            title,
+            ssDataChime.playbackURL,
+          );
           const data = {
-            ...ssData,
-            joinInfo: this.joinInfo
-          }
-          sessionStorage.setItem(this.ssName, JSON.stringify(data));
-          this.playbackURL = this.joinInfo.PlaybackURL;
+            ...ssDataChime,
+            joinInfo: joinInfoRoom,
+          };
+          sessionStorage.setItem(ssNameChime, JSON.stringify(data));
+          setJoinInfo(joinInfoRoom);
+          setPlaybackURL(joinInfoRoom.PlaybackURL);
         } else {
           // Browser refresh
-          this.joinInfo = ssData.joinInfo;
-          this.playbackURL = ssData.joinInfo.PlaybackURL;
-          await this.props.chime.reInitializeMeetingSession(this.joinInfo, this.username);
+          const joinInfoRoom = ssDataChime.joinInfo;
+          await chime.reInitializeMeetingSession(joinInfoRoom, username);
+          setJoinInfo(joinInfoRoom);
+          setPlaybackURL(ssDataChime.joinInfo.PlaybackURL);
         }
+        setMeetingStatus('Success');
 
-        this.setState({ meetingStatus: 'Success' });
-
-        this.props.chime.audioVideo.addObserver({
+        chime.audioVideo.addObserver({
           audioVideoDidStop: async (sessionStatus) => {
-            if (sessionStatus.statusCode() === MeetingSessionStatusCode.AudioCallEnded) {
-              const whereTo = `${this.baseHref}/${this.role === 'host' ? '' : 'end'}`;
-              this.props.chime.leaveRoom(this.role === 'host');
-              this.props.history.push(whereTo);
+            if (
+              sessionStatus.statusCode() ===
+              MeetingSessionStatusCode.AudioCallEnded
+            ) {
+              const whereTo = `${baseHref}/${role === 'host' ? '' : 'end'}`;
+              chime.leaveRoom(role === 'host');
+              history.push(whereTo);
             }
-          }
+          },
         });
 
-        await this.props.chime.joinRoom(this.audioElementRef.current);
+        await chime.joinRoom(audioElementRef.current);
       } catch (error) {
         // eslint-disable-next-line
-        console.error(error);
-        this.setState({ meetingStatus: 'Failed' });
+        console.log('error', error);
+        setShowError(true);
+        setErrorMsg(error.message);
+        setMeetingStatus('Failed');
       }
     };
     start();
-  }
+  }, []);
 
   /*
    * Settings
    */
-
-  openSettings = () => {
-    this.setState({ showSettings: true });
-  }
-
-  closeSettings = () => {
-    this.setState({ showSettings: false });
-  }
-
-  handleClick = (e) => {
-    const { showSettings } = this.state;
+  const handleClick = (e) => {
     if (showSettings) {
       let node = e.target;
       let isModal = false;
@@ -120,103 +111,85 @@ class Meeting extends Component {
         node = node.parentNode;
       }
       if (!isModal) {
-        this.setState({ showSettings: false });
+        setShowSettings(true);
       }
     }
-  }
+  };
 
-  saveSettings = (playbackURL, currentAudioInputDevice, currentAudioOutputDevice, currentVideoInputDevice) => {
-    this.setState({
-      showSettings: false,
-      currentAudioInputDevice,
-      currentAudioOutputDevice,
-      currentVideoInputDevice
-    });
-  }
+  const saveSettings = (
+    currentAudioInputDevice,
+    currentAudioOutputDevice,
+    currentVideoInputDevice,
+  ) => {
+    chime.chooseCurrentVideoInputDevice = currentVideoInputDevice;
+    chime.chooseCurrentAudioinputDevice = currentAudioInputDevice;
+    chime.chooseCurrentAudioOutputDevice = currentAudioOutputDevice;
 
-  setMetadataId = (metadataId) => {
-    this.setState({ metadataId });
-  }
+    setShowSettings(false);
+  };
 
-  setErrorMsg = errorMsg => {
-    this.setState({ errorMsg, showError: true });
-  }
-
-  closeError = () => {
-    this.setState({ showError: false });
-  }
-
-  layout = () => {
-    if(this.state.meetingStatus !== 'Success') {
+  const layout = () => {
+    if (meetingStatus !== 'Success') {
       return;
     }
 
     return (
-      <div className="app-grid" onClick={this.handleClick}>
+      <div className="app-grid" onClick={handleClick}>
         <div className="main-stage">
           <div className="cams pos-relative">
-          <LocalVideo
-            chime={this.props.chime}
-            joinInfo={this.joinInfo}
-          />
-          <RemoteVideoGroup
-            chime={this.props.chime}
-            joinInfo={this.joinInfo}
-          />
+            <LocalVideo chime={chime} joinInfo={joinInfo} />
+            <RemoteVideoGroup chime={chime} joinInfo={joinInfo} />
           </div>
           <VideoPlayer
-            setMetadataId={this.setMetadataId}
-            videoStream={this.playbackURL}
+            setMetadataId={(metadataId) => (this.metadataId = metadataId)}
+            videoStream={playbackURL}
           />
           <Controls
-            chime={this.props.chime}
-            baseHref={this.baseHref}
-            ssName={this.ssName}
-            title={this.title}
-            openSettings={this.openSettings}
-            role={this.role}
-            history={this.props.history}
-            myVideoElement={this.myVideoElement}
+            chime={chime}
+            baseHref={baseHref}
+            ssName={ssName}
+            title={ssData.title}
+            openSettings={() => setShowSettings(true)}
+            role={ssData.role}
+            history={history}
+            myVideoElement={myVideoElement.current}
           />
         </div>
         <Chat
-          chime={this.props.chime}
-          title={this.title}
-          username={this.username}
-          joinInfo={this.joinInfo}
+          chime={chime}
+          title={ssData.title}
+          username={ssData.username}
+          joinInfo={joinInfo}
         />
-        {this.state.showSettings && (
+        {showSettings && (
           <Settings
-            chime={this.props.chime}
-            joinInfo={this.joinInfo}
-            saveSettings={this.saveSettings}
+            chime={chime}
+            joinInfo={joinInfo}
+            saveSettings={saveSettings}
+            closeSettings={() => setShowSettings(false)}
           />
         )}
       </div>
-    )
-  }
+    );
+  };
 
-  render() {
-    return (
-      <React.Fragment>
+  return (
+    <React.Fragment>
+      <audio ref={audioElementRef} style={{ display: 'none' }} />
 
-        <audio ref={this.audioElementRef} style={{ display: 'none' }} />
+      {layout()}
 
-        {this.layout()}
-
-        {this.state.showError && (
-          <Error
-            closeError={this.closeError}
-            errorMsg={this.state.errorMsg}
-          />
-        )}
-      </React.Fragment>
-    )
-  }
-}
+      {showError && (
+        <Error closeError={() => setShowError(false)} errorMsg={errorMsg} />
+      )}
+    </React.Fragment>
+  );
+};
 
 Meeting.propTypes = {
-  chime: PropTypes.object
+  chime: PropTypes.object,
+  history: PropTypes.object,
+  location: PropTypes.object,
 };
 
 export default withRouter(Meeting);

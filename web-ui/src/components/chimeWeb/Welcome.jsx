@@ -1,112 +1,128 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, createRef } from 'react';
+import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import * as config from '../../config';
 import Error from './Error';
 
-class Welcome extends Component {
+const Welcome = ({ location, history }) => {
+  const [username, setUsername] = useState('');
+  const [title, setTitle] = useState('');
+  const [playbackURL, setPlaybackURL] = useState(config.DEFAULT_VIDEO_STREAM);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [showError, setShowError] = useState(false);
 
-  state = {
-    role: 'host',
-    username: '',
-    title: '',
-    playbackURL: config.DEFAULT_VIDEO_STREAM,
-    errorMsg: '',
-    showError: false
-  }
+  const baseHref = config.BASE_HREF;
+  const inputRef = createRef();
 
-  constructor() {
-    super ();
-    this.baseHref = config.BASE_HREF;
-    this.inputRef = React.createRef();
-  }
-
-  componentDidMount() {
-    const qs = new URLSearchParams(this.props.location.search);
+  useEffect(() => {
+    const qs = new URLSearchParams(location.search);
     const action = qs.get('action');
     if (action === 'join') {
       const title = qs.get('room');
-      this.props.history.push(`${this.baseHref}/join?room=${title}`);
+      history.push(`${baseHref}/join?room=${title}`);
     }
-    this.inputRef.current.focus();
-  }
+    inputRef.current.focus();
+  }, []);
 
-  handleNameChange = e => {
-    this.setState({ username: e.target.value })
-  }
+  const handleNameChange = (e) => {
+    setUsername(e.target.value);
+  };
 
-  handleRoomChange = e => {
-    this.setState({ title: e.target.value })
-  }
+  const handleRoomChange = (e) => {
+    setTitle(e.target.value);
+  };
 
-  handlePlaybackURLChange = e => {
-    this.setState({ playbackURL: e.target.value })
-  }
+  const handlePlaybackURLChange = (e) => {
+    setPlaybackURL(e.target.value);
+  };
 
-  handleCreateRoom = (e) => {
+  const handleCreateRoom = (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    this.createRoom();
-  }
+    try {
+      createRoom();
+    } catch (error) {
+      handleErrorMsg(errorMsg);
+    }
+  };
 
-  setErrorMsg = errorMsg => {
-    this.setState({ errorMsg, showError: true });
-  }
+  const handleErrorMsg = (errorMsg) => {
+    setErrorMsg(errorMsg);
+    setShowError(true);
+  };
 
-  closeError = () => {
-    this.setState({ showError: false });
-  }
-
-  async createRoom() {
-    const { title, username, playbackURL } = this.state;
+  const createRoom = async () => {
     const data = {
       username,
       title,
       playbackURL,
-      role: this.state.role
-    }
+      role: 'host',
+    };
     sessionStorage.setItem(`chime[${title}]`, JSON.stringify(data));
-    this.props.history.push(`${this.baseHref}/meeting?room=${title}`);
-  }
+    history.push(`${baseHref}/meeting?room=${title}`);
+  };
 
-  render() {
-    const { username, title, playbackURL } = this.state;
-    const createRoomDisabled = !username || !title || !playbackURL;
-    return (
-      <React.Fragment>
-        <div className="welcome form-grid">
-
-          <div className="welcome__intro">
-            <div className="intro__inner formatted-text">
-              <h1>Amazon IVS with ChimeSDK</h1>
-              <h3>Create or join rooms, and watch Amazon IVS streams with anyone.</h3>
-            </div>
+  const createRoomDisabled = !username || !title || !playbackURL;
+  return (
+    <React.Fragment>
+      <div className="welcome form-grid">
+        <div className="welcome__intro">
+          <div className="intro__inner formatted-text">
+            <h1>Amazon IVS with ChimeSDK</h1>
+            <h3>
+              Create or join rooms, and watch Amazon IVS streams with anyone.
+            </h3>
           </div>
-
-          <div className="welcome__content pd-4">
-            <div className="content__inner">
-              <h2 className="mg-b-2">Get started</h2>
-              <form action="">
-                <fieldset className="mg-b-2">
-                  <input className="mg-b-2" type="text" placeholder="Your name" value={username} ref={this.inputRef} onChange={this.handleNameChange} />
-                  <input type="text" placeholder="Room name" value={title} onChange={this.handleRoomChange} />
-                  <input type="text" placeholder="Playback URL" value={playbackURL} onChange={this.handlePlaybackURLChange} />
-                  <button className="mg-t-2 btn btn--primary" disabled={createRoomDisabled} onClick={this.handleCreateRoom} >Create room</button>
-                </fieldset>
-              </form>
-            </div>
-          </div>
-
         </div>
-        {this.state.showError && (
-          <Error
-            closeError={this.closeError}
-            errorMsg={this.state.errorMsg}
-          />
-        )}
-      </React.Fragment>
-    )
-  }
-}
+
+        <div className="welcome__content pd-4">
+          <div className="content__inner">
+            <h2 className="mg-b-2">Get started</h2>
+            <form action="">
+              <fieldset className="mg-b-2">
+                <input
+                  className="mg-b-2"
+                  type="text"
+                  placeholder="Your name"
+                  value={username}
+                  ref={inputRef}
+                  onChange={handleNameChange}
+                />
+                <input
+                  type="text"
+                  placeholder="Room name"
+                  value={title}
+                  onChange={handleRoomChange}
+                />
+                <input
+                  type="text"
+                  placeholder="Playback URL"
+                  value={playbackURL}
+                  onChange={handlePlaybackURLChange}
+                />
+                <button
+                  className="mg-t-2 btn btn--primary"
+                  disabled={createRoomDisabled}
+                  onClick={handleCreateRoom}
+                >
+                  Create room
+                </button>
+              </fieldset>
+            </form>
+          </div>
+        </div>
+      </div>
+      {showError && (
+        <Error closeError={() => showError(false)} errorMsg={errorMsg} />
+      )}
+    </React.Fragment>
+  );
+};
+
+Welcome.propTypes = {
+  history: PropTypes.object,
+  location: PropTypes.object,
+};
 
 export default withRouter(Welcome);

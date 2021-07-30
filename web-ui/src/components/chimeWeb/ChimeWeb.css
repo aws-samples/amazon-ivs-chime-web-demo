@@ -82,6 +82,13 @@ input:disabled {
   width: 500px;
 }
 
+@media (max-width: 767px) {
+  .content__inner {
+    width: 100%;
+  }
+}
+
+
 /* Main stage */
 .main-stage {
   display: grid;
