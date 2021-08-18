@@ -38,6 +38,7 @@ If you are interested in running IVS + Chime demo services locally as part of le
 ## Known Issues
 * The application was written for demonstration purposes and not for production use.
 * The application was only tested on desktop browsers, and may not work on mobile.
+* The settings window throws an error on the following browers: Firefox, Safari
 * Currently only tested in the us-west-2 (Oregon) region. Additional regions may be supported depending on service availability.
 
 ## License
