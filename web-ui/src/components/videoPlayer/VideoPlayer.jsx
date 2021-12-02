@@ -8,7 +8,7 @@ const VideoPlayer = (props) => {
   useEffect(() => {
     const mediaPlayerScript = document.createElement('script');
     mediaPlayerScript.src =
-      'https://player.live-video.net/1.5.0/amazon-ivs-player.min.js';
+      'https://player.live-video.net/1.6.1/amazon-ivs-player.min.js';
     mediaPlayerScript.async = true;
     mediaPlayerScript.onload = () => mediaPlayerScriptLoaded();
     document.body.appendChild(mediaPlayerScript);
