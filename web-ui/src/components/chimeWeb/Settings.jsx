@@ -135,7 +135,7 @@ const Settings = ({ chime, closeSettings, saveSettings, joinInfo }) => {
               name="speaker"
               className="select__field"
               onChange={handleSpeakerChange}
-              value={speaker || currentSpeaker.value}
+              value={speaker || currentSpeaker?.value}
               disabled={!availableSpeakers.length}
             >
               {renderDevices(availableSpeakers, currentSpeaker, 'speaker')}
