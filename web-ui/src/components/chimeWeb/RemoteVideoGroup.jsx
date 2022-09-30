@@ -7,7 +7,9 @@ const MAX_REMOTE_VIDEOS = config.CHIME_ROOM_MAX_ATTENDEE;
 
 const RemoteVideoGroup = ({ chime, joinInfo }) => {
   const [roster, setRoster] = useState([]);
+  const [newRoster, setNewRoster] = useState({});
   const [previousRoster, setPreviousRoster] = useState({});
+  const [isObservedChime, setIsObservedChime] = useState(false);
 
   const findRosterSlot = (attendeeId) => {
     let index;
@@ -24,11 +26,7 @@ const RemoteVideoGroup = ({ chime, joinInfo }) => {
     return 0;
   };
 
-  const rosterCallback = (newRoster) => {
-    if (Object.keys(newRoster).length > 2) {
-      if (config.DEBUG) console.log('More than 2');
-    }
-
+  useEffect(() => {
     if (Object.keys(newRoster).length < Object.keys(previousRoster).length) {
       if (config.DEBUG) console.log('Attendee(s) left');
       const differ = Object.keys(previousRoster).filter(
@@ -48,8 +46,15 @@ const RemoteVideoGroup = ({ chime, joinInfo }) => {
         }
       }
     }
+    setPreviousRoster({ ...newRoster });
+  }, [newRoster]);
 
-    setPreviousRoster(Object.assign({}, newRoster));
+  const rosterCallback = (newRoster) => {
+    if (Object.keys(newRoster).length > 2) {
+      if (config.DEBUG) console.log('More than 2');
+    }
+
+    setNewRoster({ ...newRoster });
 
     let attendeeId;
     for (attendeeId in newRoster) {
@@ -123,6 +128,17 @@ const RemoteVideoGroup = ({ chime, joinInfo }) => {
   };
 
   useEffect(() => {
+    if (isObservedChime === false && roster.length === MAX_REMOTE_VIDEOS) {
+      chime.subscribeToRosterUpdate(rosterCallback);
+      chime.audioVideo.addObserver({
+        videoTileDidUpdate: videoTileDidUpdateCallback,
+        videoTileWasRemoved: videoTileWasRemovedCallback,
+      });
+      setIsObservedChime(true);
+    }
+  }, [roster]);
+
+  useEffect(() => {
     const rosterNew = [];
     // eslint-disable-next-line
     Array.from(Array(MAX_REMOTE_VIDEOS).keys()).map((key, index) => {
@@ -132,12 +148,6 @@ const RemoteVideoGroup = ({ chime, joinInfo }) => {
     });
     setRoster(rosterNew);
 
-    chime.subscribeToRosterUpdate(rosterCallback);
-
-    chime.audioVideo.addObserver({
-      videoTileDidUpdate: videoTileDidUpdateCallback,
-      videoTileWasRemoved: videoTileWasRemovedCallback,
-    });
     return () => {
       chime.unsubscribeFromRosterUpdate(rosterCallback);
     };
