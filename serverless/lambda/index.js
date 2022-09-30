@@ -94,7 +94,7 @@ const endMeeting = async(title) => {
 
   console.info("deleteMeeting > params:", JSON.stringify(params, null, 2));
 
-  const result = await ddb.delete(params).promise();
+  const result = await ddb.deleteItem(params).promise();
 
   console.info("deleteMeeting > result:", JSON.stringify(result, null, 2));
 
