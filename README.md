@@ -1,3 +1,5 @@
+# ⚠️ IMPORTANT ⚠️ This repository is no longer actively maintained and will be archived at the end of 2022
+
 # Amazon IVS + Chime demo
 
 A demo web application intended as an educational tool for demonstrating how to load and play Amazon IVS streams alongside the Amazon Chime SDK.
